@@ -1,0 +1,146 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f0f8ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    background-color: white;
+    width: 500px;
+    height: 80vh;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.title {
+    font-size: 30px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #6495ED;
+}
+
+.input-area {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+#task-text,
+.task-edit-text {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #6495ED;
+    border-radius: 5px;
+}
+
+#task-text:focus,
+.task-edit-text:focus {
+    outline: none;
+    border-color: #6495ED;
+    box-shadow: 0 0 3px rgba(100, 149, 237, 0.5);
+}
+
+.task-edit-text {
+    margin-left: -8px;
+    margin-right: 12px;
+}
+
+#task-add-button {
+    margin-left: 8px;
+    padding: 8px 12px;
+    border: none;
+    background-color: #6495ED;
+    font-weight: bold;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#task-add-button:hover {
+    background-color: #ff5c5c;
+}
+
+.task-list {
+    flex: 1;
+    overflow-y: auto;
+    list-style: none;
+    border-top: 3px solid #6495ED;
+    border-bottom: 3px solid #6495ED;
+    padding-right: 10px;
+}
+
+.task-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+}
+
+.task-list li:not(:last-child) {
+    border-bottom: 1px dashed #6495ED;
+}
+
+.task-list input[type="checkbox"] {
+    margin-right: 5px;
+    transform: scale(1.3);
+    accent-color: #ff5c5c;
+}
+
+.task-list input[type="checkbox"]:checked ~ .task-text {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.task-list span {
+    display: inline-block;
+    word-break: break-word;
+    white-space: normal;
+    flex: 1;
+    padding: 8px 12px;
+    margin-right: 15px;
+    font-size: 14px;
+    color: #333;
+}
+
+.task-list button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #6495ED;
+    transition: color 0.3s ease;
+}
+
+.task-list button:hover {
+    color: #ff5c5c;
+}
+
+.task-list .task-edit-button,
+.task-list .task-edit-done-button {
+    margin-left: 5px;
+}
+
+.task-list .task-delete-button {
+    margin-left: 12px;
+}
+
+.task-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.task-list::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+}
