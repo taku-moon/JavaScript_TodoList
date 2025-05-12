@@ -162,10 +162,8 @@ function focusEditInput(id) {
 
 function editTask(id) {
     const newText = getTrimmedTaskEditedInput(id);
-    const errorMessage = validateText(newText);
 
-    if (errorMessage) {
-        alert(errorMessage);
+    if (validateText(newText)) {
         return;
     }
 
