@@ -1,143 +1,204 @@
-const taskText = document.getElementById("task-text");
+const taskInput = document.getElementById("task-input");
 const taskAddButton = document.getElementById("task-add-button");
-const taskList = document.getElementById("task-list");
+const taskListEl = document.getElementById("task-list");
 
 let tasks = [];
 
-function saveTasks() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+const Storage = {
+    key: "tasks",
+
+    save(tasks) {
+        localStorage.setItem(Storage.key, JSON.stringify(tasks));
+    },
+
+    load() {
+        const saved = localStorage.getItem(Storage.key);
+        return saved ? JSON.parse(saved) : [];
+    }
+};
+
+function init() {
+    tasks = Storage.load();
+    render();
 }
 
-function loadTasks() {
-    const saved = localStorage.getItem("tasks");
+function render() {
+    taskListEl.innerHTML = tasks.map(task => createTaskItemHTML(task)).join("");
+}
 
-    if (saved) {
-        tasks = JSON.parse(saved);
+function createTaskItemHTML(task) {
+    const { id, text, isChecked, isEditing } = task;
+
+    if (isEditing) {
+        return `
+            <li data-id="${id}">
+                <input type="text" class="task-edit-input" value="${escapeHtml(text)}">
+                <button class="task-edit-button"><i class="fas fa-check"></i></button>
+                <button class="task-delete-button"><i class="fas fa-trash"></i></button>
+            </li>
+        `;
+    } else {
+        return `
+            <li data-id="${id}">
+                <input type="checkbox" class="task-check" ${isChecked ? "checked" : ""}>
+                <span class="task-text">${escapeHtml(text)}</span>
+                <button class="task-edit-mode-button"><i class="fas fa-pen"></i></button>
+                <button class="task-delete-button"><i class="fas fa-trash"></i></button>
+            </li>
+        `;
     }
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function toggleTaskCheck(id) {
+    const task = tasks.find(task => task.id === id);
+    
+    if (task) {
+        task.isChecked = !task.isChecked;
+    }
+
+    Storage.save(tasks);
+
+    render();
+}
+
+function addTask() {
+    const text = getTrimmedTaskInput();
+    
+    if (validateText(text)) {
+        return;
+    }
+        
+    const task = createTask(text);
+    tasks.push(task);
+
+    clearTaskInput();
+
+    Storage.save(tasks);
+
+    render();
+}
+
+function getTrimmedTaskInput() {
+    return taskInput.value.trim();
+}
+
+function validateText(text) {
+    const message = getValidationMessage(text);
+
+    if (message) {
+        alert(message);
+        return true;
+    }
+    
+    return false;
+}
+
+function getValidationMessage(text) {
+    if (isEmpty(text)) {
+        return "할 일을 입력하세요!";
+    }
+
+    if (isTooLong(text)) {
+        return "할 일은 20자 이내로 입력하세요!";
+    }
+
+    return null;
+}
+
+function isEmpty(text) {
+    return text === "";
+}
+
+function isTooLong(text) {
+    return text.length > 20;
+}
+
+function createTask(text) {
+    return {
+        id: generateRandomId(),
+        text,
+        isChecked: false,
+        isEditing: false
+    };
 }
 
 function generateRandomId() {
     return '_' + Math.random().toString(36).slice(2, 11);
 }
 
-function addTask() {
-    const textValue = taskText.value.trim();
+function clearTaskInput() {
+    taskInput.value = "";
+}
 
-    if (textValue === "") {
-        alert("할 일을 입력하세요!");
-        return;
+function enableEditMode(id) {
+    const task = tasks.find(task => task.id === id);
+
+    if (task) {
+        task.isEditing = true;
     }
 
-    tasks.push({
-        id: generateRandomId(),
-        text: textValue,
-        isChecked: false,
-        isEditing: false
-    });
-
-    taskText.value = "";
-    
     render();
-    saveTasks();
+
+    focusEditInput(id);
+}
+
+function focusEditInput(id) {
+    const inputEl = document.querySelector(`li[data-id="${id}"] .task-edit-input`);
+
+    if (inputEl) {
+        inputEl.focus();
+        inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+    }
 }
 
 function editTask(id) {
-    const taskEditText = document.querySelector(`li[data-id="${id}"] .task-edit-text`);
-    const editTextValue = taskEditText.value.trim();
+    const newText = getTrimmedTaskEditedInput(id);
+    const errorMessage = validateText(newText);
 
-    if (editTextValue === "") {
-        alert("할 일을 입력하세요!");
+    if (errorMessage) {
+        alert(errorMessage);
         return;
     }
 
-    for (let task of tasks) {
-        if (task.id === id) {
-            task.text = editTextValue;
-            task.isEditing = false;
-            break;
-        }
-    }
+    updateTaskText(id, newText);
+
+    Storage.save(tasks);
 
     render();
-    saveTasks();
+}
+
+function getTrimmedTaskEditedInput(id) {
+    const inputEl = document.querySelector(`li[data-id="${id}"] .task-edit-input`);
+    return inputEl?.value.trim() ?? "";
+}
+
+function updateTaskText(id, newText) {
+    const task = tasks.find(t => t.id === id);
+
+    if (task) {
+        task.text = newText;
+        task.isEditing = false;
+    }
 }
 
 function deleteTask(id) {
-    for (let i = 0; i < tasks.length; i++) {
-        if (tasks[i].id === id) {
-            tasks.splice(i, 1);
-            break;
-        }
-    }
+    tasks = tasks.filter(task => task.id !== id);
+
+    Storage.save(tasks);
 
     render();
-    saveTasks();
 }
 
-function toggleTaskCheck(id) {
-    for (let task of tasks) {
-        if (task.id === id) {
-            task.isChecked = !task.isChecked;
-            break;
-        }
-    }
-
-    render();
-    saveTasks();
-}
-
-function editModeOn(id) {
-    for (let task of tasks) {
-        if (task.id === id) {
-            task.isEditing = true;
-            break;
-        }
-    }
-
-    render();
-
-    const editText = document.querySelector(`li[data-id="${id}"] .task-edit-text`);
-
-    if (editText) {
-        editText.focus();
-        editText.setSelectionRange(editText.value.length, editText.value.length);
-    }
-}
-
-function render() {
-    taskList.innerHTML = createTaskHTML();
-}
-
-function createTaskHTML() {
-    let resultHTML = "";
-
-    tasks.forEach(task => {
-        let checkboxHTML = "";
-        let contentHTML = "";
-        let buttonHTML = "";
-
-        if (task.isEditing) {
-            contentHTML = `<input type="text" class="task-edit-text" value="${task.text}">`;
-            buttonHTML = `<button class="task-edit-done-button"><i class="fas fa-check"></i></button>`;
-        } else {
-            checkboxHTML = `<input type="checkbox" class="task-check" ${task.isChecked ? "checked" : ""}>`;
-            contentHTML = `<span class="task-text">${task.text}</span>`;
-            buttonHTML = `<button class="task-edit-button"><i class="fas fa-pen"></i></button>`;
-        }
-
-        resultHTML += `
-            <li data-id="${task.id}">
-                ${checkboxHTML}
-                ${contentHTML}
-                ${buttonHTML}
-                <button class="task-delete-button"><i class="fas fa-trash"></i></button>
-            </li>`;
-    });
-
-    return resultHTML;
-}
-
-taskText.addEventListener("keypress", e => {
+taskInput.addEventListener("keypress", e => {
     if (e.key === "Enter") {
         taskAddButton.click();
     }
@@ -145,45 +206,47 @@ taskText.addEventListener("keypress", e => {
 
 taskAddButton.addEventListener("click", addTask);
 
-taskList.addEventListener("click", e => {
-    const li = e.target.closest("li");
+taskListEl.addEventListener("click", event => {
+    const id = getTaskIdFromEvent(event);
 
-    if (!li) 
+    if (!id)
         return;
 
-    const id = li.dataset.id;
-
-    if (e.target.closest(".task-edit-button")) {
-        editModeOn(id);
-    } else if (e.target.closest(".task-edit-done-button")) {
+    if (event.target.closest(".task-edit-mode-button")) {
+        enableEditMode(id);
+    } else if (event.target.closest(".task-edit-button")) {
         editTask(id);
-    } else if (e.target.closest(".task-delete-button")) {
+    } else if (event.target.closest(".task-delete-button")) {
         deleteTask(id);
     }
 });
 
-taskList.addEventListener("change", e => {
-    if (e.target.matches(".task-check")) {
-        const li = e.target.closest("li");
+taskListEl.addEventListener("change", event => {
+    const id = getTaskIdFromEvent(event);
 
-        if (!li)
-            return;
-        
-        toggleTaskCheck(li.dataset.id);
+    if (!id)
+        return;
+
+    if (event.target.matches(".task-check")) {
+        toggleTaskCheck(id);
     }
 });
 
-taskList.addEventListener("keydown", e => {
-    if (e.target.matches(".task-edit-text") && e.key === "Enter") {
-        const li = e.target.closest("li");
+taskListEl.addEventListener("keydown", event => {
+    const id = getTaskIdFromEvent(event);
 
-        if (!li)
-            return;
+    if (!id)
+        return;
         
-        editTask(li.dataset.id);
+    if (event.target.matches(".task-edit-input") && event.key === "Enter") {
+        editTask(id);
     }
 });
 
-// 초기 로드
-loadTasks();
-render();
+function getTaskIdFromEvent(event) {
+    const li = event.target.closest("li");
+    return li ? li.dataset.id : null;
+}
+
+
+init();

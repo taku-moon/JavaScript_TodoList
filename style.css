@@ -37,24 +37,24 @@ body {
     margin-bottom: 10px;
 }
 
-#task-text,
-.task-edit-text {
+#task-input,
+.task-edit-input {
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #6495ED;
     border-radius: 5px;
 }
 
-#task-text:focus,
-.task-edit-text:focus {
+#task-input:focus,
+.task-edit-input:focus {
     outline: none;
     border-color: #6495ED;
     box-shadow: 0 0 3px rgba(100, 149, 237, 0.5);
 }
 
-.task-edit-text {
+.task-edit-input {
     margin-left: -8px;
-    margin-right: 12px;
+    margin-right: 17px;
 }
 
 #task-add-button {
@@ -127,7 +127,7 @@ body {
     color: #ff5c5c;
 }
 
-.task-list .task-edit-button,
+.task-list .task-edit-mode-button,
 .task-list .task-edit-done-button {
     margin-left: 5px;
 }
