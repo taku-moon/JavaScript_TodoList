@@ -19,7 +19,67 @@ const Storage = {
 
 function init() {
     tasks = Storage.load();
+    bindEvents();
     render();
+}
+
+function bindEvents() {
+    taskInput.addEventListener("keypress", handleTaskInputKeyPress);
+    taskAddButton.addEventListener("click", addTask);
+    taskListEl.addEventListener("click", handleTaskListClick);
+    taskListEl.addEventListener("change", handleTaskListChange);
+    taskListEl.addEventListener("keydown", handleTaskListKeydown);
+}
+
+function handleTaskInputKeyPress(event) {
+    if (event.key === "Enter") {
+        taskAddButton.click();
+    }
+}
+
+function handleTaskListClick(event) {
+    const id = getTaskIdFromEvent(event);
+
+    if (!id) {
+        return; 
+    }
+
+    if (event.target.closest(".task-edit-mode-button")) {
+        enableEditMode(id);
+    } else if (event.target.closest(".task-edit-button")) {
+        editTask(id);
+    } else if (event.target.closest(".task-delete-button")) {
+        deleteTask(id);
+    }
+}
+
+function handleTaskListChange(event) {
+    const id = getTaskIdFromEvent(event);
+    
+    if (!id) {
+        return; 
+    }
+
+    if (event.target.matches(".task-check")) {
+        toggleTaskCheck(id);
+    }
+}
+
+function handleTaskListKeydown(event) {
+    const id = getTaskIdFromEvent(event);
+    
+    if (!id) {
+        return; 
+    }
+
+    if (event.target.matches(".task-edit-input") && event.key === "Enter") {
+        editTask(id);
+    }
+}
+
+function getTaskIdFromEvent(event) {
+    const li = event.target.closest("li");
+    return li ? li.dataset.id : null;
 }
 
 function render() {
@@ -58,18 +118,6 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-function toggleTaskCheck(id) {
-    const task = tasks.find(task => task.id === id);
-    
-    if (task) {
-        task.isChecked = !task.isChecked;
-    }
-
-    Storage.save(tasks);
-
-    render();
-}
-
 function addTask() {
     const text = getTrimmedTaskInput();
     
@@ -82,9 +130,7 @@ function addTask() {
 
     clearTaskInput();
 
-    Storage.save(tasks);
-
-    render();
+    storageSaveAndRender();
 }
 
 function getTrimmedTaskInput() {
@@ -169,9 +215,7 @@ function editTask(id) {
 
     updateTaskText(id, newText);
 
-    Storage.save(tasks);
-
-    render();
+    storageSaveAndRender();
 }
 
 function getTrimmedTaskEditedInput(id) {
@@ -191,59 +235,22 @@ function updateTaskText(id, newText) {
 function deleteTask(id) {
     tasks = tasks.filter(task => task.id !== id);
 
-    Storage.save(tasks);
-
-    render();
+    storageSaveAndRender();
 }
 
-taskInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") {
-        taskAddButton.click();
+function toggleTaskCheck(id) {
+    const task = tasks.find(task => task.id === id);
+    
+    if (task) {
+        task.isChecked = !task.isChecked;
     }
-});
 
-taskAddButton.addEventListener("click", addTask);
+    storageSaveAndRender();
+}
 
-taskListEl.addEventListener("click", event => {
-    const id = getTaskIdFromEvent(event);
-
-    if (!id)
-        return;
-
-    if (event.target.closest(".task-edit-mode-button")) {
-        enableEditMode(id);
-    } else if (event.target.closest(".task-edit-button")) {
-        editTask(id);
-    } else if (event.target.closest(".task-delete-button")) {
-        deleteTask(id);
-    }
-});
-
-taskListEl.addEventListener("change", event => {
-    const id = getTaskIdFromEvent(event);
-
-    if (!id)
-        return;
-
-    if (event.target.matches(".task-check")) {
-        toggleTaskCheck(id);
-    }
-});
-
-taskListEl.addEventListener("keydown", event => {
-    const id = getTaskIdFromEvent(event);
-
-    if (!id)
-        return;
-        
-    if (event.target.matches(".task-edit-input") && event.key === "Enter") {
-        editTask(id);
-    }
-});
-
-function getTaskIdFromEvent(event) {
-    const li = event.target.closest("li");
-    return li ? li.dataset.id : null;
+function storageSaveAndRender() {
+    Storage.save(tasks);
+    render();
 }
 
 
